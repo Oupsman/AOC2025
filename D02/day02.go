@@ -108,8 +108,8 @@ func Solve(part2 bool, inputs []string) int64 {
 func main() {
 	timeStart := time.Now()
 
-	// INPUT := "sample.txt"
-	INPUT := "input.txt"
+	INPUT := "sample2.txt"
+	// INPUT := "input.txt"
 	fileContent := readFile(INPUT)
 	sumPart1 := Solve(false, fileContent)
 	sumPart2 := Solve(true, fileContent)
