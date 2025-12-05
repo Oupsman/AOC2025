@@ -68,13 +68,15 @@ func Solve(part2 bool, inputs []string) int64 {
 		sort.Slice(ranges, func(i, j int) bool {
 			return ranges[i][0] < ranges[j][0]
 		})
-
+		mergedRanges = append(mergedRanges, ranges[0])
 		for _, interval := range ranges {
-			if len(mergedRanges) == 0 || mergedRanges[len(mergedRanges)-1][1] < interval[0] {
-				mergedRanges = append(mergedRanges, interval)
+			last := &mergedRanges[len(mergedRanges)-1]
+			if interval[0] <= last[1] {
+				if interval[1] > last[1] {
+					last[1] = interval[1]
+				}
 			} else {
-				last := mergedRanges[len(mergedRanges)-1]
-				last[1] = max(last[1], interval[1])
+				mergedRanges = append(mergedRanges, interval)
 			}
 		}
 		fmt.Println("Merged ranges:", mergedRanges)
