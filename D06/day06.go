@@ -23,68 +23,87 @@ func readFile(fname string) []string {
 	}
 	return lines
 }
-func reconstructNumbersFromColumn(numbers ...int) []int {
 
-	strNumbers := make([]string, len(numbers))
-	for i, num := range numbers {
-		strNumbers[i] = strconv.Itoa(num)
-	}
+func reconstructNumbers(input []string) []int {
+	var numbers []int
+	maxCol := 0
 
-	maxLen := 0
-	for _, s := range strNumbers {
-		if len(s) > maxLen {
-			maxLen = len(s)
+	for _, line := range input {
+		if len(line) > maxCol {
+			maxCol = len(line)
 		}
 	}
 
-	padded := make([]string, len(strNumbers))
-	for i, s := range strNumbers {
-		padded[i] = s + strings.Repeat(" ", maxLen-len(s))
+	padded := make([]string, len(input))
+	for i, line := range input {
+		if len(line) < maxCol {
+			padded[i] = line + strings.Repeat(" ", maxCol-len(line))
+		} else {
+			padded[i] = line
+		}
 	}
-	var reconstructed []int
-	for col := maxLen - 1; col >= 0; col-- {
-		var numStr string
-		for _, s := range padded {
-			if col < len(s) && s[col] != ' ' {
-				numStr += string(s[col])
+
+	for i, line := range padded {
+		fmt.Printf("Line %d: |%s|\n", i, line)
+	}
+
+	for j := 0; j < maxCol; j++ {
+		var numString string
+
+		for i := 0; i < len(padded); i++ {
+			if j < len(padded[i]) && padded[i][j] != ' ' {
+				numString += string(padded[i][j])
 			}
 		}
-		if numStr != "" {
-			num, _ := strconv.Atoi(numStr)
-			reconstructed = append(reconstructed, num)
+
+		if numString != "" {
+			number, _ := strconv.Atoi(numString)
+			numbers = append(numbers, number)
 		}
 	}
 
-	for i, j := 0, len(reconstructed)-1; i < j; i, j = i+1, j-1 {
-		reconstructed[i], reconstructed[j] = reconstructed[j], reconstructed[i]
-	}
+	return numbers
+}
 
-	return reconstructed
+func doOperation(numbersFromString []int, operator uint8) int64 {
+	fmt.Println("Numbers from string: ", numbersFromString)
+	partialResult := int64(numbersFromString[0])
+	for i := 1; i < len(numbersFromString); i++ {
+		number := numbersFromString[i]
+		if operator == '*' {
+			partialResult *= int64(number)
+		} else {
+			partialResult += int64(number)
+		}
+		fmt.Println("Partial result: ", partialResult)
+	}
+	return partialResult
 }
 
 func Solve(part2 bool, inputs []string) int64 {
 	var result int64 = 0
 	var operators []string
 	var numbers [][]int
-	reOperators := regexp.MustCompile(`[\+\*]`)
 
-	for _, char := range reOperators.FindAllString(inputs[(len(inputs)-1)], -1) {
-		operators = append(operators, char)
-	}
-	// fmt.Println(operators)
-
-	for i := 0; i < len(inputs)-1; i++ {
-		var numbersLine []int
-		re := regexp.MustCompile(`\d+`)
-		// result := re.ReplaceAllString(input, " ")
-		for _, value := range re.FindAllString(inputs[i], -1) {
-			number, _ := strconv.Atoi(value)
-			numbersLine = append(numbersLine, number)
-		}
-		numbers = append(numbers, numbersLine)
-	}
 	// fmt.Println(numbers)
 	if !part2 {
+		reOperators := regexp.MustCompile(`[\+\*]`)
+
+		for _, char := range reOperators.FindAllString(inputs[(len(inputs)-1)], -1) {
+			operators = append(operators, char)
+		}
+		// fmt.Println(operators)
+
+		for i := 0; i < len(inputs)-1; i++ {
+			var numbersLine []int
+			re := regexp.MustCompile(`\d+`)
+			// result := re.ReplaceAllString(input, " ")
+			for _, value := range re.FindAllString(inputs[i], -1) {
+				number, _ := strconv.Atoi(value)
+				numbersLine = append(numbersLine, number)
+			}
+			numbers = append(numbers, numbersLine)
+		}
 		for i := 0; i < len(numbers[0]); i++ {
 			var resultLine int64 = 0
 			for j := 0; j < len(numbers); j++ {
@@ -108,35 +127,48 @@ func Solve(part2 bool, inputs []string) int64 {
 
 		return result
 	} else {
-		for i := len(numbers[0]) - 1; i >= 0; i-- {
-			var colNumbers []int
-			for _, col := range numbers {
-				colNumbers = append(colNumbers, col[i])
+		var startingColumns []int
+		for i, char := range inputs[(len(inputs) - 1)] {
+			if char == '*' || char == '+' {
+				startingColumns = append(startingColumns, i)
 			}
-			fmt.Println("Origin numbers", colNumbers)
-			numbersPart2 := reconstructNumbersFromColumn(colNumbers...)
-			fmt.Println("Interpreted:", numbersPart2)
-			if len(numbersPart2) == 0 {
-				continue
-			}
-
-			op := operators[i]
-
-			resultLine := numbersPart2[0]
-			for i := 1; i < len(numbersPart2); i++ {
-				switch op {
-				case "*":
-					fmt.Println("Multiplying")
-					resultLine *= numbersPart2[i]
-				case "+":
-					fmt.Println("Adding")
-					resultLine += numbersPart2[i]
-				}
-			}
-			fmt.Println("Result of line: ", resultLine)
-			result += int64(resultLine)
 		}
+		// Now we cut the other part of the array
+		for startingIndex := 0; startingIndex < len(startingColumns); startingIndex++ {
+			var numStrings []string
+			if startingIndex != len(startingColumns)-1 {
+				for i := 0; i < len(inputs)-1; i++ {
+					numString := inputs[i][startingColumns[startingIndex] : startingColumns[startingIndex+1]-1]
+					fmt.Printf("NumString: |%s|\n", numString)
+					numStrings = append(numStrings, numString)
+				}
+				fmt.Println(numStrings)
+				numbersFromString := reconstructNumbers(numStrings)
+				operator := inputs[len(inputs)-1][startingColumns[startingIndex]]
 
+				result += doOperation(numbersFromString, operator)
+			} else {
+				for i := 0; i < len(inputs)-1; i++ {
+					numString := inputs[i][startingColumns[startingIndex]:len(inputs[i])]
+					fmt.Printf("NumString: |%s|\n", numString)
+					numStrings = append(numStrings, numString)
+				}
+				fmt.Println(numStrings)
+				numbersFromString := reconstructNumbers(numStrings)
+				fmt.Println("Numbers from string: ", numbersFromString)
+				partialResult := int64(numbersFromString[0])
+				for i := 1; i < len(numbersFromString); i++ {
+					number := numbersFromString[i]
+					if inputs[len(inputs)-1][startingColumns[startingIndex]] == '*' {
+						partialResult = int64(number) * result
+					} else {
+						partialResult += int64(number)
+					}
+				}
+				fmt.Println("Partial result: ", partialResult)
+				result += partialResult
+			}
+		}
 	}
 	return result
 }
