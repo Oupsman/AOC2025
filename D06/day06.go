@@ -155,18 +155,9 @@ func Solve(part2 bool, inputs []string) int64 {
 				}
 				fmt.Println(numStrings)
 				numbersFromString := reconstructNumbers(numStrings)
-				fmt.Println("Numbers from string: ", numbersFromString)
-				partialResult := int64(numbersFromString[0])
-				for i := 1; i < len(numbersFromString); i++ {
-					number := numbersFromString[i]
-					if inputs[len(inputs)-1][startingColumns[startingIndex]] == '*' {
-						partialResult = int64(number) * result
-					} else {
-						partialResult += int64(number)
-					}
-				}
-				fmt.Println("Partial result: ", partialResult)
-				result += partialResult
+				operator := inputs[len(inputs)-1][startingColumns[startingIndex]]
+
+				result += doOperation(numbersFromString, operator)
 			}
 		}
 	}
@@ -176,8 +167,8 @@ func Solve(part2 bool, inputs []string) int64 {
 func main() {
 	timeStart := time.Now()
 
-	INPUT := "sample.txt"
-	// INPUT := "input.txt"
+	// INPUT := "sample.txt"
+	INPUT := "input.txt"
 	fileContent := readFile(INPUT)
 	sumPart1 := Solve(false, fileContent)
 	sumPart2 := Solve(true, fileContent)
