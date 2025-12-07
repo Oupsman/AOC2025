@@ -60,6 +60,12 @@ func countPaths(grid [][]rune, visited [][]bool, current Point, memo map[Point]i
 
 func solvePart1(puzzle [][]rune) int {
 	result := 0
+	for index, r := range puzzle[0] {
+		if r == 'S' {
+			puzzle[1][index] = '|'
+			break
+		}
+	}
 	for rowIndex := 1; rowIndex < len(puzzle)-1; rowIndex++ {
 		for colIndex, colValue := range puzzle[rowIndex] {
 			if colValue == '|' {
